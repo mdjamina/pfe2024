@@ -1,6 +1,6 @@
 from coling_baseline import ColingBaselineClassifier
 from nltk.corpus.reader.wordnet import NOUN, VERB, ADJ, ADV
-from SpaCyParserWrapper import Parser
+
 
 def set_features1(sentence, i):
     word = sentence[i][1]
@@ -11,49 +11,51 @@ def set_features1(sentence, i):
         'word.isupper=%s' % word.isupper(),
         'word.istitle=%s' % word.istitle(),
         'word.isdigit=%s' % word.isdigit(),
-        'word.isdot=%s' % isdot(word),    
-        'word.isdash=%s' % isdash(word),          
+        'word.isdot=%s' % isdot(word),
+        'word.isdash=%s' % isdash(word),
         'word.iscomma=%s' % iscomma(word),
         'postag=' + sentence[i][0],
         'lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(sentence[i][4]))
     ]
     if i > 0:
         # Set the features of relationship with previous word.
-        word1 = sentence[i-1][1]
+        word1 = sentence[i - 1][1]
         features.extend([
             '-1:word.lower=' + word1.lower(),
             '-1:word.length=' + str(len(word1)),
             '-1:word.isupper=%s' % word1.isupper(),
             '-1:word.istitle=%s' % word1.istitle(),
-            '-1:word.isdigit=%s' % word1.isdigit(), 
-            '-1:word.isdot=%s' % isdot(word1),    
-            '-1:word.isdash=%s' % isdash(word1),  
-            '-1:word.iscomma=%s' % iscomma(word1),  
-            'postag=' + sentence[i-1][0],
-            'lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(sentence[i-1][4]))       
+            '-1:word.isdigit=%s' % word1.isdigit(),
+            '-1:word.isdot=%s' % isdot(word1),
+            '-1:word.isdash=%s' % isdash(word1),
+            '-1:word.iscomma=%s' % iscomma(word1),
+            'postag=' + sentence[i - 1][0],
+            'lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(sentence[i - 1][4]))
         ])
     else:
         features.append('Begin_Of_Sentence')
-        
-    if i < len(sentence)-1:
+
+    if i < len(sentence) - 1:
         # Set the features of relationship with next word.
-        word1 = sentence[i+1][1]
+        word1 = sentence[i + 1][1]
         features.extend([
             '+1:word.lower=' + word1.lower(),
             '+1:word.length=' + str(len(word1)),
             '+1:word.isupper=%s' % word1.isupper(),
             '+1:word.istitle=%s' % word1.istitle(),
             '+1:word.isdigit=%s' % word1.isdigit(),
-            '+1:word.isdot=%s' % isdot(word1),    
-            '+1:word.isdash=%s' % isdash(word1),  
+            '+1:word.isdot=%s' % isdot(word1),
+            '+1:word.isdash=%s' % isdash(word1),
             '+1:word.iscomma=%s' % iscomma(word1),
-            'postag=' + sentence[i+1][0],
-            'lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(sentence[i+1][4])) 
+            'postag=' + sentence[i + 1][0],
+            'lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(sentence[i + 1][4]))
         ])
     else:
         features.append('End_Of_Sentence')
-                
+
     return features
+
+
 #-----------Honnibal_CRF_Adapted---------
 
 def set_features_honnibal_CRF_Adapted(sentence, i):
@@ -62,18 +64,20 @@ def set_features_honnibal_CRF_Adapted(sentence, i):
     postag = sentence[i][4]
     cB = "no"
     if i > 1:
-        if sentence[i-1][1] == ',':
+        if sentence[i - 1][1] == ',':
             cB = "yes"
     features = [
         'cB=' + cB
     ]
     return features
 
+
 def set_features_honnibal(sentence, i):
     if i > 1:
-        if sentence[i-1][1] == ',':
+        if sentence[i - 1][1] == ',':
             return "RESTR"
     return "NON-RESTR"
+
 
 #-----------Dornescu---------
 
@@ -93,9 +97,9 @@ def set_features_dornescu(sentence, i):
     ]
     if i > 0:
         # Set the features of relationship with previous word.
-        wordBefore = sentence[i-1][1]
-        postagBefore = sentence[i-1][4]
-        modifierTypeBefore = sentence[i-1][-1]
+        wordBefore = sentence[i - 1][1]
+        postagBefore = sentence[i - 1][4]
+        modifierTypeBefore = sentence[i - 1][-1]
         features.extend([
             '-1:word.lower=' + wordBefore.lower(),
             #'-1:word.isupper=%s' % wordBefore.isupper(),
@@ -103,16 +107,16 @@ def set_features_dornescu(sentence, i):
             '-1postag=' + postagBefore,
             '-1postag[:2]=' + postagBefore[:2],
             '-1lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postagBefore)),
-            '-1modifierType=' + modifierTypeBefore  
+            '-1modifierType=' + modifierTypeBefore
         ])
     else:
-        features.append('B_o_S') #Beginning of Sentence
-        
-    if i < len(sentence)-1:
+        features.append('B_o_S')  #Beginning of Sentence
+
+    if i < len(sentence) - 1:
         # Set the features of relationship with next word.
-        wordAfter = sentence[i+1][1]
-        postagAfter = sentence[i+1][4]
-        modifierTypeAfter = sentence[i+1][-1]
+        wordAfter = sentence[i + 1][1]
+        postagAfter = sentence[i + 1][4]
+        modifierTypeAfter = sentence[i + 1][-1]
         features.extend([
             '+1:word.lower=' + wordAfter.lower(),
             #'+1:word.isupper=%s' % wordAfter.isupper(),
@@ -123,9 +127,10 @@ def set_features_dornescu(sentence, i):
             '+1modifierType=' + modifierTypeAfter
         ])
     else:
-        features.append('E_o_S') #End of Sentence
-                
+        features.append('E_o_S')  #End of Sentence
+
     return features
+
 
 #---------------Stanovsky-------------
 
@@ -146,25 +151,25 @@ def set_features_stanovsky(sentence, i):
 
     if i > 0:
         # Set the features of relationship with previous word.
-        wordBefore = sentence[i-1][1]
-        postagBefore = sentence[i-1][4]
-        modifierTypeBefore = sentence[i-1][-1]
+        wordBefore = sentence[i - 1][1]
+        postagBefore = sentence[i - 1][4]
+        modifierTypeBefore = sentence[i - 1][-1]
         features.extend([
             '-1:word.lower=' + wordBefore.lower(),
             #'-1:word.isupper=%s' % wordBefore.isupper(),
             #'-1:word.istitle=%s' % wordBefore.istitle(),
             '-1postag=' + postagBefore,
             '-1lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postagBefore)),
-            '-1modifierType=' + modifierTypeBefore    
+            '-1modifierType=' + modifierTypeBefore
         ])
     else:
-        features.append('B_o_S') #Beginning of Sentence
-        
-    if i < len(sentence)-1:
+        features.append('B_o_S')  #Beginning of Sentence
+
+    if i < len(sentence) - 1:
         # Set the features of relationship with next word.
-        wordAfter = sentence[i+1][1]
-        postagAfter = sentence[i+1][4]
-        modifierTypeAfter = sentence[i+1][-1]
+        wordAfter = sentence[i + 1][1]
+        postagAfter = sentence[i + 1][4]
+        modifierTypeAfter = sentence[i + 1][-1]
         features.extend([
             '+1:word.lower=' + wordAfter.lower(),
             #'+1:word.isupper=%s' % wordAfter.isupper(),
@@ -174,7 +179,7 @@ def set_features_stanovsky(sentence, i):
             '+1modifierType=' + modifierTypeAfter
         ])
     else:
-        features.append('E_o_S') #End of Sentence   
+        features.append('E_o_S')  #End of Sentence
     '''        
     embs = loadEmbs()
     if modifierType == 'PREADJ-MOD':
@@ -182,6 +187,7 @@ def set_features_stanovsky(sentence, i):
             features += ['emb{0}={1}'.format(i, emb) for (i, emb) in enumerate(embs[word.lower()])]     
     '''
     return features
+
 
 def loadEmbs():
     d = {}
@@ -205,8 +211,9 @@ def set_features_unigram(sentence, i):
         'postag=' + postag,
         'lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postag)),
         'modifierType=' + modifierType
-    ]                
+    ]
     return features
+
 
 def set_features_unigram2(sentence, i):
     word = sentence[i][1]
@@ -218,8 +225,9 @@ def set_features_unigram2(sentence, i):
         'postag[:2]=' + postag[:2],
         'lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postag)),
         'modifierType=' + modifierType
-    ]                
+    ]
     return features
+
 
 def set_features_bigram(sentence, i):
     word = sentence[i][1]
@@ -233,17 +241,18 @@ def set_features_bigram(sentence, i):
     ]
     if i > 0:
         # Set the features of relationship with previous word.
-        wordBefore = sentence[i-1][1]
-        postagBefore = sentence[i-1][4]
-        modifierTypeBefore = sentence[i-1][-1]
+        wordBefore = sentence[i - 1][1]
+        postagBefore = sentence[i - 1][4]
+        modifierTypeBefore = sentence[i - 1][-1]
         features.extend([
             '-1postag=' + postagBefore,
             '-1lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postagBefore)),
-            '-1modifierType=' + modifierTypeBefore    
+            '-1modifierType=' + modifierTypeBefore
         ])
     else:
-        features.append('B_o_S') #Beginning of Sentence              
+        features.append('B_o_S')  #Beginning of Sentence
     return features
+
 
 def set_features_novel(sentence, i):
     word = sentence[i][1]
@@ -258,55 +267,59 @@ def set_features_novel(sentence, i):
         'lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postag)),
         'modifierType=' + modifierType]
 
-
     if i > 0 and i < len(sentence) - 1:
-        wordBefore = sentence[i-1][1]
-        postagBefore = sentence[i-1][4]
-        modifierTypeBefore = sentence[i-1][-1]
-        wordAfter = sentence[i+1][1]
-        postagAfter = sentence[i+1][4]
-        modifierTypeAfter = sentence[i+1][-1]
+        wordBefore = sentence[i - 1][1]
+        postagBefore = sentence[i - 1][4]
+        modifierTypeBefore = sentence[i - 1][-1]
+        wordAfter = sentence[i + 1][1]
+        postagAfter = sentence[i + 1][4]
+        modifierTypeAfter = sentence[i + 1][-1]
         features.extend([
             '-1:word.lower|word.lower|+1:word.lower=' + wordBefore.lower() + '|' + word.lower() + '|' + wordAfter.lower(),
-            '-1postag|postag|+1postag=' + postagBefore + '|' + postag + '|' + postagAfter, 
-            '-1lemma|lemma|+1lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postagBefore)) + '|' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postag)) + '|' +  ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postagAfter)),
-            '-1modifierType|modifierType|+1modifierType=' + modifierTypeBefore + '|' + modifierType + '|' +  modifierTypeAfter,
+            '-1postag|postag|+1postag=' + postagBefore + '|' + postag + '|' + postagAfter,
+            '-1lemma|lemma|+1lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(
+                postagBefore)) + '|' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(
+                postag)) + '|' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postagAfter)),
+            '-1modifierType|modifierType|+1modifierType=' + modifierTypeBefore + '|' + modifierType + '|' + modifierTypeAfter,
         ])
     if i > 0:
         # Set the features of relationship with previous word.
-        wordBefore = sentence[i-1][1]
-        postagBefore = sentence[i-1][4]
-        modifierTypeBefore = sentence[i-1][-1]
+        wordBefore = sentence[i - 1][1]
+        postagBefore = sentence[i - 1][4]
+        modifierTypeBefore = sentence[i - 1][-1]
         features.extend([
             '-1:word.lower|word.lower=' + wordBefore.lower() + '|' + word.lower(),
             '-1postag|postag=' + postagBefore + '|' + postag,
             '-1postag[:2]|postag[:2]=' + postagBefore[:2] + '|' + postag[:2],
-            '-1lemma|lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postagBefore)) + '|' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postag)),
+            '-1lemma|lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(
+                postagBefore)) + '|' + ColingBaselineClassifier.lmtzr.lemmatize(word,
+                                                                                convertPtbToLemmatizerPos(postag)),
             '-1modifierType|modifierType=' + modifierTypeBefore + '|' + modifierType,
             '-1type|-1postag|type|postag=' + modifierTypeBefore + '|' + postagBefore + '|' + modifierType + postag
         ])
     else:
-        features.append('B_o_S') #Beginning of Sentence
-        
-    if i < len(sentence)-1:
+        features.append('B_o_S')  #Beginning of Sentence
+
+    if i < len(sentence) - 1:
         # Set the features of relationship with next word.
-        wordAfter = sentence[i+1][1]
-        postagAfter = sentence[i+1][4]
-        modifierTypeAfter = sentence[i+1][-1]
+        wordAfter = sentence[i + 1][1]
+        postagAfter = sentence[i + 1][4]
+        modifierTypeAfter = sentence[i + 1][-1]
         features.extend([
             'word.lower|+1:word.lower= ' + word.lower() + '|' + wordAfter.lower(),
             'postag|+1postag=' + postag + '|' + postagAfter,
             'postag[:2]|+1postag[:2]=' + postag + '|' + postagAfter[:2],
-            'lemma|+1lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postag)) + '|' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postagAfter)),
+            'lemma|+1lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(
+                postag)) + '|' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postagAfter)),
             'modifierType|+1modifierType=' + modifierType + '|' + modifierTypeAfter,
             'type|postag|+1type|+1postag=' + modifierType + '|' + postag + '|' + modifierTypeAfter + "|" + postagAfter,
         ])
     else:
-        features.append('E_o_S') #End of Sentence
+        features.append('E_o_S')  #End of Sentence
 
     if modifierType == 'PREADJ-MOD' or modifierType == 'PP-MOD':
         features.append('relativePositionInSentence=' + relativePositionInSentence(i, len(sentence)))
-    
+
     '''
     embs = loadEmbs()
     if modifierType == 'PREADJ-MOD':
@@ -316,24 +329,29 @@ def set_features_novel(sentence, i):
     '''
     return features
 
+
 def relativePositionInSentence(wordPos, lengthOfSentence):
-    if float(wordPos)/lengthOfSentence < 0.25:
-        return "1" #first Quadrant
-    elif float(wordPos)/lengthOfSentence < 0.50:
-        return "2" #second Quadrant
-    elif float(wordPos)/lengthOfSentence < 0.75:
-        return "3" #second Quadrant
+    if float(wordPos) / lengthOfSentence < 0.25:
+        return "1"  #first Quadrant
+    elif float(wordPos) / lengthOfSentence < 0.50:
+        return "2"  #second Quadrant
+    elif float(wordPos) / lengthOfSentence < 0.75:
+        return "3"  #second Quadrant
     else:
-        return "4" #fourth Quadrant
+        return "4"  #fourth Quadrant
+
 
 def isdot(word):
     return True if word in '.' else False
 
+
 def isdash(word):
     return True if word in '-' else False
 
+
 def iscomma(word):
     return True if word in ',' else False
+
 
 def get_features(sent, type):
     if type == 1:
@@ -355,11 +373,14 @@ def get_features(sent, type):
     else:
         raise Exception
 
+
 def get_labels(sent):
     return [x[-2] for x in sent]
 
+
 def get_tokens(sent):
-    return [x[-2] for x in sent]   
+    return [x[-2] for x in sent]
+
 
 def convertPtbToLemmatizerPos(ptbPos):
     if ptbPos.startswith('VB'):

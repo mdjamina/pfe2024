@@ -3,6 +3,8 @@ from props.dependency_tree.tree_readers import create_dep_trees_from_stream
 
 class Classifier:
     def __init__(self, treesFile, state):
+        self.trees = None
+        self.state = None
         self.treesFile = treesFile
         self.setStatus(state)
 

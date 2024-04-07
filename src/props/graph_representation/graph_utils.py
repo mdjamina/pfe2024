@@ -1,24 +1,21 @@
-from pygraph.algorithms.sorting import topological_sorting
-from pygraph.classes.digraph import digraph
-# import graph_representation.node
-import subprocess, math, re, nltk
-from pygraph.algorithms.accessibility import accessibility
-from props.graph_representation.word import NO_INDEX, Word, strip_punctuations
-from pygraph.algorithms.traversal import traversal
-from pygraph.algorithms.minmax import minimal_spanning_tree_prim, shortest_path
-import cgi
-# from graph_representation.node import isRcmodProp
-import time
-# from graph_representation.node import Node
-from props.graph_representation import newNode
 from operator import itemgetter
-import logging
+
+from props.graph_representation import newNode, node
+from props.graph_representation.word import NO_INDEX, strip_punctuations
+
+from pygraph.algorithms.accessibility import accessibility
+from pygraph.algorithms.minmax import minimal_spanning_tree_prim, shortest_path
+from pygraph.algorithms.sorting import topological_sorting
+from pygraph.algorithms.traversal import traversal
+from pygraph.classes.digraph import digraph
+
 
 def accessibility_wo_self(graph):
     ret = accessibility(graph)
     for k in ret:
         ret[k].remove(k)
     return ret
+
 
 # def isRCmod(graph, node):
 #     ns = graph.neighbors(node)
@@ -49,11 +46,11 @@ def duplicate_node(graph, node, connectToNeighbours):
     dupNode = node.copy()
     dupNode.isDuplicated = True
     graph.add_node(dupNode)
-    
+
     if connectToNeighbours:
         for curNeighbour in graph.neighbors(node):
             graph.add_edge((dupNode, curNeighbour), graph.edge_label((node, curNeighbour)))
-    
+
     return dupNode
 
 
@@ -66,6 +63,7 @@ def get_node_dic(graph, node):
         d[curLabel].append(neighbor)
     return d
 
+
 def duplicateEdge(graph, orig, new, newLabel=""):
     """
     adds a new edge, duplicating the label of the original one
@@ -73,7 +71,7 @@ def duplicateEdge(graph, orig, new, newLabel=""):
     label = graph.edge_label(orig)
     if not label:
         label = newLabel
-        
+
     graph.add_edge(edge=new,
                    label=label)
 
@@ -83,6 +81,7 @@ def findChain(graph, func_ls):
     find a chain of connected in the graph and corresponding to func_ls
     Returns one arbitrary chain which matches all functions.
     """
+
     def inner(nodes, func_ls):
         if (len(func_ls) == 0):
             return []
@@ -92,9 +91,9 @@ def findChain(graph, func_ls):
             if (len(curAns) == len(func_ls) - 1):
                 return [node] + curAns
         return []
-            
+
     return inner(nodes=graph.nodes(),
-                 func_ls=func_ls) 
+                 func_ls=func_ls)
 
 
 def delete_component(graph, node):
@@ -107,13 +106,12 @@ def delete_component(graph, node):
     @type  node: graph_representation.node.Node
     @param node: node which roots the component to be deleted
     """
-    
+
     nodes = minimal_spanning_tree_prim(graph=graph,
-                                  root=node)
-    
+                                       root=node)
+
     for node in nodes:
         graph.del_node(node)
-
 
 
 def component_to_string(graph, node):
@@ -126,21 +124,17 @@ def component_to_string(graph, node):
     @type  node: graph_representation.node.Node
     @param node: node which roots the component
     """
-    
+
     nodes = minimal_spanning_tree_prim(graph=graph,
-                                  root=node)
-    
+                                       root=node)
+
     texts = []
     for node in nodes:
         texts.extend([w for w in node.get_text(graph) if w.index != NO_INDEX])
-    
 
-    chars = '\'\"-,.:;!? '    
-    return " ".join([w.word for w in sorted(texts, key=lambda w:w.index)]).rstrip(chars).lstrip(chars)
+    chars = '\'\"-,.:;!? '
+    return " ".join([w.word for w in sorted(texts, key=lambda w: w.index)]).rstrip(chars).lstrip(chars)
 
-
-
-    
 
 def duplicate_component(graph, node):
     """
@@ -157,20 +151,20 @@ def duplicate_component(graph, node):
     """
     nodesMap = {}
     nodes = minimal_spanning_tree_prim(graph=graph,
-                                  root=node)
+                                       root=node)
     for curNode in nodes:
         dupNode = duplicate_node(graph=graph,
                                  node=curNode,
                                  connectToNeighbours=False)
         nodesMap[curNode.uid] = dupNode
-    
+
     for curNode in nodes:
         curDupNode = nodesMap[curNode.uid]
         for curNeighbour in graph.neighbors(curNode):
             curDupNeighbour = nodesMap[curNeighbour.uid]
             graph.add_edge(edge=(curDupNode, curDupNeighbour),
                            label=graph.edge_label((curNode, curNeighbour)))
-    
+
     return nodesMap[node.uid]
 
 
@@ -206,7 +200,6 @@ def find_edges(graph, filterFunc):
     return filter(filterFunc, graph.edges())
 
 
-
 def join(graph, nodeLs):
     """
     Adds to graph a node combined of nodes specified in nodeLs, any child of them
@@ -222,9 +215,9 @@ def join(graph, nodeLs):
     @return The combined node
     """
     # combine node features and add to graph
-    combinedNode = reduce(graph_representation.node.join, nodeLs) 
+    combinedNode = reduce(node.join, nodeLs)
     graph.add_node(combinedNode)
-    
+
     # add all children from both nodes as children of the combined node
     # TODO: need to handle cases where node1 and node2 are neighbors of the same node, currently 
     # will raise exception from the graph when adding an already existing edge
@@ -232,7 +225,7 @@ def join(graph, nodeLs):
         if curNode.uid in graph.nodesMap:  # allow for nodes which aren't placed in the graph to join
             for child in graph.neighbors(curNode):
                 graph.add_edge((combinedNode, child), label=graph.edge_label((curNode, child)))
-        
+
     return combinedNode
 
 
@@ -251,23 +244,20 @@ def generate_possessive_top_node(graph, nodeLs):
     @rtype:  Node
     @return: the top node for a possessive construction
     """
-    
+
     ls = []
     # extend apposition node to their elements
-    for node in nodeLs:
-        if graph_representation.node.isApposition(node):
-            ls.extend(graph.neighbors(node))
-            
+    for nodeL in nodeLs:
+        if node.isApposition(nodeL):
+            ls.extend(graph.neighbors(nodeL))
+
         else:
             ls.append(node)
-    
+
     topNode = ls[0]
     for curNode in ls[1:]:
-        topNode = graph_representation.node.join(topNode, curNode, graph)
+        topNode = node.join(topNode, curNode, graph)
     return topNode
-
-
-
 
 
 def sort_nodes_topologically(graph, nodeLs):
@@ -285,16 +275,17 @@ def sort_nodes_topologically(graph, nodeLs):
     """
     # uid_dic = dict([(node.uid,node) for node in nodeLs])
     # helperNodes = uid_dic.keys()
-    helperGraph = graph.__class__(originalSentence="")  # TODO: efficiency - this is done this way to avoid circular dependency
+    helperGraph = graph.__class__(
+        originalSentence="")  # TODO: efficiency - this is done this way to avoid circular dependency
     helperGraph.add_nodes(nodeLs)
     acc = accessibility(graph)
-    
+
     for node1 in nodeLs:
-            for node2 in acc[node1]:
-                if node2 in nodeLs:
-                    if node1.uid != node2.uid:  # TODO: efficiency 
-                        helperGraph.add_edge((node1, node2))
-    
+        for node2 in acc[node1]:
+            if node2 in nodeLs:
+                if node1.uid != node2.uid:  # TODO: efficiency
+                    helperGraph.add_edge((node1, node2))
+
     sorted_nodes = topological_sorting(helperGraph)
     return sorted_nodes
 
@@ -312,21 +303,21 @@ def get_min_max_span(graph, node):
     @rtype:  tuple [int]
     @return: (min,max) 
     """
-    
+
     minInd = NO_INDEX
     maxInd = NO_INDEX
-    
+
     for curNode in traversal(graph, node, 'pre'):
         curMin = curNode.minIndex()
         curMax = curNode.maxIndex()
-        
+
         maxInd = max(maxInd, curMax)
         if curMin != NO_INDEX:
             if minInd == NO_INDEX:
                 minInd = curMin
             else:
                 minInd = min(minInd, curMin)
-            
+
     return (minInd, maxInd)
 
 
@@ -343,11 +334,12 @@ def sister_nodes(graph, node):
     @rtype:  list [node]
     @return: all sister nodes 
     """
-    
+
     ret = set()
     for curIncident in graph.incidents(node):
         ret = set.union(ret, set(graph.neighbors(curIncident)))
     return ret
+
 
 def is_following(graph, node1, node2):
     """
@@ -355,14 +347,16 @@ def is_following(graph, node1, node2):
     """
     node1_max = get_min_max_span(graph, node1)[1]
     node2_min = get_min_max_span(graph, node2)[0]
-    return (node1_max + 1 == node2_min)
+    return node1_max + 1 == node2_min
+
 
 def immediate_sister(graph, node1, node2):
     """
     is node2 an immediate sister of node1?
     """
-    
-    return (node2 in sister_nodes(graph, node1) and is_following(graph, node1, node2))
+
+    return node2 in sister_nodes(graph, node1) and is_following(graph, node1, node2)
+
 
 def reattch(graph, node, new_father, label=""):
     """
@@ -372,20 +366,20 @@ def reattch(graph, node, new_father, label=""):
     @param graph: a graph in which the node reside
 
     """
-    
+
     for curFather in graph.incidents(node):
         graph.del_edge(edge=(curFather, node))
-    
+
     graph.add_edge(edge=(new_father, node),
                    label=label)
-     
-    
+
+
 def deref(graph, node, rel):
     """
     get all neighboring nodes of "node" which are connected through rel (which can either be a single relation or a list of relations)
     useful for traversing relations in the graph.
     """
-    
+
     neighbors = graph.neighbors(node)
     if isinstance(rel, list):
         ret = []
@@ -408,18 +402,19 @@ def find_node_by_index_range(graph, start, end):
                 return node
     return False
 
+
 def to_undirected(graph):
     ret = graph.__class__("")
     ret.add_nodes(graph.nodes())
     for u, v in graph.edges():
-        if not(ret.has_edge((u,v))):
+        if not (ret.has_edge((u, v))):
             ret.add_edge(edge=(u, v),
                          label=graph.edge_label((u, v)))
-        if not(ret.has_edge((v,u))):
+        if not (ret.has_edge((v, u))):
             ret.add_edge(edge=(v, u),
                          label=graph.edge_label((u, v)))
     return ret
-    
+
 
 def shortest_distance(graph, node1, node2):
     """
@@ -431,15 +426,17 @@ def shortest_distance(graph, node1, node2):
         return -1
     return d[node2]
 
+
 def find_top_of_component(graph, source_node):
     """
     Find the top node of the connected component in which source_node resides.
     Since this graph may contain cycles - we go "up" the graph, as long as we don't revisit nodes
     """
-    _, d = shortest_path(reverse_graph_edges(graph), # Reverse graph to go up
-                         source = source_node)
+    _, d = shortest_path(reverse_graph_edges(graph),  # Reverse graph to go up
+                         source=source_node)
     return max(d.iteritems(),
-               key = itemgetter(1))[0] # Returns the farthest away node
+               key=itemgetter(1))[0]  # Returns the farthest away node
+
 
 def reverse_graph_edges(graph):
     """
@@ -457,58 +454,59 @@ def reverse_graph_edges(graph):
     # Add reveresed edges to the returned graph
     for (u, v) in graph.edges():
         ret_graph.add_edge((v, u),
-                           label = graph.edge_label((u, v)))
+                           label=graph.edge_label((u, v)))
 
     return ret_graph
 
+
 def merge_nodes(gr, node1, node2):
-    if (gr.has_edge((node1, node2))):
+    if gr.has_edge((node1, node2)):
         gr.del_edge((node1, node2))
     else:
         gr.del_edge((node2, node1))
-        
+
     new = newNode.join(node1, node2, gr)
     for curNode in [node1, node2]:
         for curFather in gr.incidents(curNode):
-            if (not gr.has_edge((curFather,new))):
+            if not gr.has_edge((curFather, new)):
                 duplicateEdge(graph=gr,
                               orig=(curFather, curNode),
                               new=(curFather, new))
         for curNeigbour in gr.neighbors(curNode):
-            if (not gr.has_edge((new,curNeigbour))):
+            if not gr.has_edge((new, curNeigbour)):
                 duplicateEdge(graph=gr,
                               orig=(curNode, curNeigbour),
                               new=(new, curNeigbour))
     gr.del_nodes([node1, node2])
 
-def subgraph_to_string(graph,node,exclude=[]):
-    nodes = [node]
+
+def subgraph_to_string(graph, nodeL, exclude=[]):
+    nodes = [nodeL]
     change = True
     while change:
-        change=False
+        change = False
         for curNode in nodes:
             for curNeigbour in graph.neighbors(curNode):
                 if (curNeigbour in nodes) or (curNeigbour in exclude): continue
                 nodes.append(curNeigbour)
                 change = True
-    
 
-#     minInd = min([n.minIndex() for n in nodes])-1
-#     maxInd = max([n.maxIndex() for n in nodes])-1
-#     ret = " ".join(graph.originalSentence.split(" ")[minInd:maxInd+1])
-#     nodes = [n for n in minimal_spanning_tree(graph, node) if not n in exclude]
-#     ret = " ".join(node.get_original_text() for node in sorted(nodes,key = lambda n: n.minIndex()))
+    #     minInd = min([n.minIndex() for n in nodes])-1
+    #     maxInd = max([n.maxIndex() for n in nodes])-1
+    #     ret = " ".join(graph.originalSentence.split(" ")[minInd:maxInd+1])
+    #     nodes = [n for n in minimal_spanning_tree(graph, node) if not n in exclude]
+    #     ret = " ".join(node.get_original_text() for node in sorted(nodes,key = lambda n: n.minIndex()))
     try:
         ret = ""
         words = []
         for n in nodes:
             words += n.surface_form
         words = list(set(words))
-        ret = " ".join([w.word for w in strip_punctuations(sorted(words,key=lambda w:w.index))])+" "
+        ret = " ".join([w.word for w in strip_punctuations(sorted(words, key=lambda w: w.index))]) + " "
     except:
         raise Exception()
-#     
-    
+    #
+
     return ret
 
 
@@ -516,6 +514,4 @@ def multi_get(d, ls):
     ret = []
     for k in ls:
         ret.extend(d.get(k, []))
-    return ret        
-
-
+    return ret

@@ -10,6 +10,7 @@ from operator import itemgetter
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus.reader.wordnet import NOUN, VERB, ADJ, ADV
 
+
 class ColingBaselineClassifier(Classifier):
     crfModelName = '../models/crf_model.crfsuite'
     lmtzr = WordNetLemmatizer()
@@ -19,18 +20,18 @@ class ColingBaselineClassifier(Classifier):
         word = tree[nodeIndex].word
         postag = tree[nodeIndex].pos
         return [featuresPrefix + feat for feat in [
-         'word.lower=' + word.lower(),
-         'word.isupper=%s' % word.isupper(),
-         'word.istitle=%s' % word.istitle(),
-         'postag=' + postag,
-         'postag[:2]=' + postag[:2],
-         'lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postag))]]
+            'word.lower=' + word.lower(),
+            'word.isupper=%s' % word.isupper(),
+            'word.istitle=%s' % word.istitle(),
+            'postag=' + postag,
+            'postag[:2]=' + postag[:2],
+            'lemma=' + ColingBaselineClassifier.lmtzr.lemmatize(word, convertPtbToLemmatizerPos(postag))]]
 
     def _train(self, data):
         trainer = pycrfsuite.Trainer(verbose=False)
-        trainer.set_params({'c1': 3.0, 
-           'c2': 1e-20, 
-           'feature.possible_transitions': True})
+        trainer.set_params({'c1': 3.0,
+                            'c2': 1e-20,
+                            'feature.possible_transitions': True})
         x_train = map(itemgetter(0), data)
         y_train = map(itemgetter(1), data)
         trainer.append(x_train, y_train)
